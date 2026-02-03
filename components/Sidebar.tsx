@@ -21,7 +21,17 @@ export default function Sidebar() {
             label: "ทะเบียน",
             icon: FileText,
             submenu: [
-                { href: "/register/moodle", label: "Moodle", icon: BookOpen }
+                { href: "/register/moodle", label: "Moodle", icon: BookOpen },
+                { href: "/register/classroom", label: "ห้องเรียน", icon: FileText }
+            ]
+        },
+        {
+            href: "/academic",
+            label: "วิชาการ",
+            icon: BookOpen,
+            submenu: [
+                { href: "/academic/course", label: "รายวิชา", icon: FileText },
+                { href: "/academic/open-course", label: "รายวิชาที่เปิด", icon: FileText }
             ]
         },
     ];
