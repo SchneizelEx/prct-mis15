@@ -8,13 +8,35 @@ export default async function OpenCoursePage({
 }) {
     const params = await searchParams;
 
+    // --- 0. Resolve Defaults from Parameter Table ---
+    let defaultYear = null;
+    let defaultSemesterId = null;
+
+    if (!params.year && !params.semester_id) {
+        try {
+            // Assuming table name is 'parameter' or 'paramater' as per user. Using 'parameter' first.
+            // Query parameter table for active semesterid
+            const [pRows] = await pool.query("SELECT semesterid FROM parameter LIMIT 1") as [any[], any];
+            if (pRows.length > 0) {
+                defaultSemesterId = pRows[0].semesterid;
+                // Get the year for this semester
+                const [sRows] = await pool.query("SELECT aYear FROM aca_semester WHERE SemesterId = ?", [defaultSemesterId]) as [any[], any];
+                if (sRows.length > 0) {
+                    defaultYear = sRows[0].aYear;
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching defaults from parameter table:", error);
+        }
+    }
+
     // --- 1. Fetch Dropdowns ---
     // Years
     const [yearsData] = await pool.query("SELECT DISTINCT aYear FROM aca_semester ORDER BY aYear DESC") as [any[], any];
     const years = yearsData.map((y: any) => y.aYear);
 
     // Default Year
-    const selectedYear = params.year || years[0];
+    const selectedYear = params.year || defaultYear || years[0];
 
     // Semesters for Year
     let semesters: any[] = [];
@@ -28,8 +50,12 @@ export default async function OpenCoursePage({
 
     // Default Semester
     let semesterId = params.semester_id;
-    if (!semesterId && semesters.length > 0) {
-        semesterId = semesters[0].SemesterId;
+    if (!semesterId) {
+        if (defaultSemesterId && selectedYear == defaultYear) {
+            semesterId = defaultSemesterId;
+        } else if (semesters.length > 0) {
+            semesterId = semesters[0].SemesterId;
+        }
     }
 
     // Partials for Semester
